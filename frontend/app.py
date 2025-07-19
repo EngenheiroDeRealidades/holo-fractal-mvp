@@ -8,8 +8,7 @@ st.set_page_config(
     page_title="HoloFractal MVP",
     layout="wide",
     initial_sidebar_state="expanded",
-    page_icon="🧿",
-    theme={"base": "dark"}
+    page_icon="🧿"
 )
 st.markdown("# 🧿 Painel Fractal · MVP")
 
