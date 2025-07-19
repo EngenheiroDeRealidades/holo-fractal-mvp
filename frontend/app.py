@@ -3,13 +3,14 @@ import requests
 import os
 from datetime import datetime
 
-# 🔮 Estética dimensional
+# 🔮 Estética dimensional (modo escuro ativado via config.toml)
 st.set_page_config(
     page_title="HoloFractal MVP",
     layout="wide",
     initial_sidebar_state="expanded",
     page_icon="🧿"
 )
+
 st.markdown("# 🧿 Painel Fractal · MVP")
 
 backend_url = os.environ.get("BACKEND_URL", "http://localhost:8000")
