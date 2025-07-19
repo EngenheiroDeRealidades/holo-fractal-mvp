@@ -1,0 +1,92 @@
+# 🔮 Configuração inicial
+$base = "D:\Site\holo-fractal-mvp"
+$venv = "$base\.venv\Scripts\Activate.ps1"
+$logDir = "$base\logs"
+$ErrorActionPreference = "Continue"
+if (-not (Test-Path $logDir)) { New-Item $logDir -ItemType Directory | Out-Null }
+
+# 🧵 Animação estilo Matrix
+function Show-MatrixIntro {
+    $chars = "░▒▓█"
+    for ($i = 0; $i -lt 20; $i++) {
+        $line = ""
+        for ($j = 0; $j -lt 40; $j++) {
+            $line += $chars | Get-Random
+        }
+        Write-Host $line -ForegroundColor DarkGreen
+        Start-Sleep -Milliseconds (Get-Random -Minimum 40 -Maximum 100)
+    }
+    Write-Host "`n💠 Central HoloFractal inicializada..." -ForegroundColor Cyan
+    Start-Sleep -Seconds 1
+}
+
+Clear-Host
+Show-MatrixIntro
+
+# 🚀 Função para rodar serviços ocultos e logar erro
+function Run-FractalService {
+    param (
+        [string]$title,
+        [string]$folder,
+        [string]$command,
+        [string]$logName
+    )
+    $timestamp = Get-Date -Format "yyyy-MM-dd_HHmm"
+    $logFile = "$logDir\$logName`_$timestamp.log"
+
+    $cmd = @"
+& '$venv'
+cd '$folder'
+$command
+"@
+
+    try {
+        Start-Process powershell -WindowStyle Hidden -ArgumentList "-NoExit", "-Command", $cmd
+        return @{Status="OK"; Message="Iniciado em segundo plano"}
+    } catch {
+        return @{Status="ERRO"; Message="Falha ao iniciar $title: $_"}
+    }
+}
+
+# 🔁 Início dos serviços
+$services = @()
+
+$services += @{ Name="Backend"; Port="8000"; Ping="http://127.0.0.1:8000/docs"; Result=Run-FractalService -title "Backend" -folder "$base\backend" -command "uvicorn main:app --reload" -logName "backend" }
+Start-Sleep -Seconds 1
+
+$services += @{ Name="Frontend"; Port="8501"; Ping="http://localhost:8501"; Result=Run-FractalService -title "Frontend" -folder "$base\frontend" -command "streamlit run app.py" -logName "frontend" }
+Start-Sleep -Seconds 1
+
+$services += @{ Name="Astro"; Port=""; Ping=""; Result=Run-FractalService -title "Astro" -folder "$base\scripts" -command "python astro.py" -logName "astro" }
+
+# 🧠 Painel de Monitoramento Vivo
+$startTime = Get-Date
+do {
+    Clear-Host
+    $uptime = (Get-Date) - $startTime
+    Write-Host "💠 Painel HoloFractal - Tempo: $($uptime.Hours)h $($uptime.Minutes)m $($uptime.Seconds)s" -ForegroundColor Cyan
+    Write-Host ""
+
+    foreach ($svc in $services) {
+        $status = $svc.Result.Status
+        $msg = $svc.Result.Message
+        $ping = $svc.Ping
+
+        if ($status -eq "ERRO") {
+            Write-Host "❌ ${svc.Name}: $msg" -ForegroundColor Red
+        } elseif ($ping) {
+            try {
+                $res = Invoke-WebRequest -Uri $ping -UseBasicParsing -TimeoutSec 2
+                $netStatus = if ($res.StatusCode -eq 200) { "🟢 Online" } else { "🔴 Offline" }
+            } catch {
+                $netStatus = "🔴 Offline"
+            }
+            Write-Host "✅ ${svc.Name}: $netStatus" -ForegroundColor Green
+        } else {
+            Write-Host "✅ ${svc.Name}: $msg" -ForegroundColor Gray
+        }
+    }
+
+    Write-Host "`n🔁 Atualizando a cada 5s | Ctrl+C para fechar painel." -ForegroundColor DarkGray
+    Start-Sleep -Seconds 5
+} while ($true)

@@ -1,0 +1,92 @@
+# 🔮 Configurações iniciais
+$base = "D:\Site\holo-fractal-mvp"
+$venv = "$base\.venv\Scripts\Activate.ps1"
+$log = "$base\logs"
+$ts = Get-Date -Format "yyyy-MM-dd_HHmm"
+if (-not (Test-Path $log)) { New-Item $log -ItemType Directory | Out-Null }
+
+function Open-FractalModule {
+    param (
+        [string]$Title,
+        [string]$Folder,
+        [string]$Command
+    )
+
+    $scriptBlock = @"
+Write-Host "`n💀 Módulo: $Title" -ForegroundColor Cyan
+& "$venv"
+Write-Host "🐍 Venv Ativado: $env:VIRTUAL_ENV" -ForegroundColor DarkGray
+cd "$Folder"
+Write-Host "🧠 Executando: $Command" -ForegroundColor Green
+Start-Sleep -Seconds 1
+$Command
+"@
+
+    Start-Process powershell -WindowStyle Normal -ArgumentList "-NoExit", "-Command", $scriptBlock
+    Start-Sleep -Milliseconds 500
+}
+
+# 🚀 Início sequencial
+Clear-Host
+Write-Host "🔮 Iniciando módulos HoloFractal..." -ForegroundColor Magenta
+
+# 1. Backend FastAPI
+Open-FractalModule -Title "Backend FastAPI" -Folder "$base\backend" -Command "uvicorn main:app --reload"
+
+# ⏳ Aguarda inicialização do backend
+Write-Host "🛡️ Verificando http://127.0.0.1:8000/docs..." -ForegroundColor DarkGray
+$maxTries = 20
+$tries = 0
+do {
+    try {
+        $res = Invoke-WebRequest -Uri "http://127.0.0.1:8000/docs" -UseBasicParsing -TimeoutSec 2
+        if ($res.StatusCode -eq 200) { break }
+    } catch { Start-Sleep -Seconds 1 }
+    $tries++
+} until ($tries -ge $maxTries)
+
+if ($tries -lt $maxTries) {
+    Write-Host "✅ Backend está online!" -ForegroundColor Cyan
+} else {
+    Write-Warning "❌ Backend não respondeu após $maxTries tentativas. Abortando."
+    exit
+}
+
+# 2. Frontend Streamlit
+Open-FractalModule -Title "Frontend Streamlit" -Folder "$base\frontend" -Command "streamlit run app.py"
+
+# 3. Astro Script
+Open-FractalModule -Title "Astro Python Script" -Folder "$base\scripts" -Command "python astro.py"
+
+# 🧠 Painel de Monitoramento Vivo
+$startTime = Get-Date
+do {
+    Clear-Host
+    $uptime = (Get-Date) - $startTime
+    Write-Host "💠 Painel HoloFractal - Tempo: $($uptime.Hours)h $($uptime.Minutes)m $($uptime.Seconds)s" -ForegroundColor Cyan
+    Write-Host ""
+
+    try {
+        $resB = Invoke-WebRequest -Uri "http://127.0.0.1:8000/docs" -UseBasicParsing -TimeoutSec 2
+        $statusBackend = if ($resB.StatusCode -eq 200) {"🟢 Online"} else {"🔴 Offline"}
+    } catch { $statusBackend = "🔴 Offline" }
+
+    try {
+        $resF = Invoke-WebRequest -Uri "http://localhost:8501" -UseBasicParsing -TimeoutSec 2
+        $statusFrontend = if ($resF.StatusCode -eq 200) {"🟢 Online"} else {"🔴 Offline"}
+    } catch { $statusFrontend = "🔴 Offline" }
+
+    $astroLogs = Get-ChildItem "$log" -Filter "astro_*.log" | Sort-Object LastWriteTime -Descending
+    $statusAstro = if ($astroLogs -and ((Get-Date) - $astroLogs[0].LastWriteTime).TotalMinutes -lt 3) {"🟢 Executado"} else {"🟡 Aguardando"}
+
+    Write-Host "╔════════════════════╦══════════════╗"
+    Write-Host "║ Módulo              ║ Status       ║"
+    Write-Host "╠════════════════════╬══════════════╣"
+    Write-Host "║ Backend FastAPI     ║ $statusBackend   ║"
+    Write-Host "║ Frontend Streamlit  ║ $statusFrontend  ║"
+    Write-Host "║ Astro.py            ║ $statusAstro     ║"
+    Write-Host "╚════════════════════╩══════════════╝"
+    Write-Host ""
+    Write-Host "🔁 Atualizando a cada 5s | Ctrl+C para fechar painel." -ForegroundColor DarkGray
+    Start-Sleep -Seconds 5
+} while ($true)

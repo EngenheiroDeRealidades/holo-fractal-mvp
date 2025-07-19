@@ -3,8 +3,3 @@ function Start-HoloAdmin {
         -ArgumentList "-NoExit -Command `"cd 'D:\Site\holo-fractal-mvp'; Clear-Host; Write-Host 'HOLOFRACTAL DEV ENVIRONMENT' -ForegroundColor Magenta`"" `
         -Verb RunAs
 }
-. 'D:\Site\holo-fractal-mvp\holoadmin.ps1'
-
-function Start-HoloAdmin {
-    # lógica da função...
-}

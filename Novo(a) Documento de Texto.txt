@@ -1,0 +1,28 @@
+# 🧠 Caminho base
+$basePath = "D:\Site\holo-fractal-mvp"
+
+# 🐍 Ativação do venv em cada janela
+$venvActivate = "& `"$basePath\.venv\Scripts\Activate.ps1`""
+
+# 🧩 Backend FastAPI
+Start-Process powershell -ArgumentList @(
+    "-NoExit",
+    "-Command",
+    "$venvActivate; cd `"$basePath\backend`"; uvicorn main:app --reload"
+) -WindowStyle Normal
+
+# 📊 Frontend Streamlit
+Start-Sleep -Milliseconds 500
+Start-Process powershell -ArgumentList @(
+    "-NoExit",
+    "-Command",
+    "$venvActivate; cd `"$basePath\frontend`"; streamlit run app.py"
+) -WindowStyle Normal
+
+# 🔮 Painel HoloAdmin (opcional)
+Start-Sleep -Milliseconds 500
+Start-Process powershell -ArgumentList @(
+    "-NoExit",
+    "-Command",
+    "$venvActivate; cd `"$basePath`"; Write-Host '💀 Painel HoloAdmin Ativado' -ForegroundColor Magenta; tree"
+) -WindowStyle Normal
