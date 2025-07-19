@@ -13,7 +13,8 @@ st.set_page_config(
 
 st.markdown("# 🧿 Painel Fractal · MVP")
 
-backend_url = os.environ.get("BACKEND_URL", "http://localhost:8000")
+# 🌐 Backend Render (ajustado!)
+backend_url = os.environ.get("BACKEND_URL", "https://holo-back-x4jw.onrender.com")
 
 # 🌐 Estado da sessão
 if 'step' not in st.session_state:
