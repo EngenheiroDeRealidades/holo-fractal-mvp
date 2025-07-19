@@ -1,0 +1,21 @@
+# Ambientes virtuais
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Streamlit arquivos temporários
+*.streamlit/
+
+# Logs e outputs
+*.log
+logs/
+output/
+*.svg
+
+# VS Code configs
+.vscode/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
